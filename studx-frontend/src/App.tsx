@@ -19,11 +19,14 @@ import MyAccountPage from './components/MyAccountPage';
 import MyOrdersPage from './components/MyOrdersPage';
 import GoPremiumPage from './components/GoPremiumPage';
 import MyListingsPage from './components/MyListingsPage';
+import SkillTestPage from './components/SkillTestPage';
+import MediaVerificationPage from './components/MediaVerificationPage';
 import type { AppState, User, MarketplaceItem, SkillExchange, Startup } from './types';
+import MySkillsPageEnhanced from './components/MySkillsPage';
 
 const API_BASE = "http://localhost:5000/api";
 
-type ExtendedAppState = AppState | 'forgot-password' | 'my-listings';
+type ExtendedAppState = AppState | 'forgot-password' | 'my-listings' | 'skill-test' | 'media-verification';
 
 const App: React.FC = () => {
   const { user, login, logout, loading: authLoading, isAuthenticated } = useAuth();
@@ -31,7 +34,16 @@ const App: React.FC = () => {
   const [state, setState] = useState<ExtendedAppState>('loading');
   const [history, setHistory] = useState<ExtendedAppState[]>([]);
   const [pendingUser, setPendingUser] = useState<(User & { password?: string }) | null>(null);
-  
+  const [currentSkillTest, setCurrentSkillTest] = useState<{
+  skillName: string;
+  level: 'beginner' | 'intermediate' | 'advanced';
+  skillId?: string;
+  } | null>(null);
+
+  const [currentSkillMedia, setCurrentSkillMedia] = useState<{
+    skillName: string;
+    skillId?: string;
+  } | null>(null);
   const [items, setItems] = useState<MarketplaceItem[]>([]);
   const [startups, setStartups] = useState<Startup[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
@@ -293,13 +305,53 @@ const App: React.FC = () => {
             <MessagesPage onBack={goBack} onNavigate={navigateTo} />
           </ProtectedRoute>
         );
+        case 'skill-test':
+  return currentSkillTest ? (
+    <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
+      <SkillTestPage
+        skillName={currentSkillTest.skillName}
+        level={currentSkillTest.level}
+        skillId={currentSkillTest.skillId}
+        onComplete={(result) => {
+          console.log('Test completed:', result);
+          setState('my-skills');
+        }}
+        onCancel={() => setState('my-skills')}
+        onNavigate={navigateTo}
+      />
+    </ProtectedRoute>
+  ) : (
+    <HomePage user={user} onNavigate={navigateTo} onLogout={handleLogout} />
+  );
+
+case 'media-verification':
+  return currentSkillMedia ? (
+    <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
+      <MediaVerificationPage
+        skillName={currentSkillMedia.skillName}
+        skillId={currentSkillMedia.skillId}
+        onComplete={(result) => {
+          console.log('Media verification completed:', result);
+          setState('my-skills');
+        }}
+        onCancel={() => setState('my-skills')}
+        onNavigate={navigateTo}
+      />
+    </ProtectedRoute>
+  ) : (
+    <HomePage user={user} onNavigate={navigateTo} onLogout={handleLogout} />
+  );
       
       case 'my-skills': 
-        return (
-          <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
-            <MySkillsPage skills={mySkills} onBack={goBack} onDelete={deleteSkill} onAdd={() => navigateTo('add-skill')} onNavigate={navigateTo} />
-          </ProtectedRoute>
-        );
+  return (
+    <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
+      <MySkillsPageEnhanced 
+        onBack={goBack} 
+        onAdd={() => navigateTo('add-skill')} 
+        onNavigate={navigateTo} 
+      />
+    </ProtectedRoute>
+  );
       
       case 'add-skill': 
         return (
@@ -307,6 +359,7 @@ const App: React.FC = () => {
             <AddSkillFlow onBack={goBack} onComplete={addSkill} onNavigate={navigateTo} />
           </ProtectedRoute>
         );
+        
       
       case 'my-account': 
         return (

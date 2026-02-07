@@ -45,18 +45,36 @@ export interface MarketplaceItem {
   createdAt?: Date;
 }
 
+export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced';
+
+export type VerificationType = 
+  | 'Verified (Intermediate)'
+  | 'Verified (Basic)'
+  | 'Self-declared'
+  | 'Portfolio Verified'
+  | 'test' 
+  | 'media' 
+  | 'both' 
+  | 'self-declared';
+
+// 👇 UPDATE SkillExchange to include these fields 👇
 export interface SkillExchange {
   id: string;
-  title: string;
+  title?: string;
   offering: string;
-  seeking: string;
+  seeking?: string;
   category: string;
   description: string;
-  name: string;
-  userId?: string;     // MongoDB user ID
-  year: string;
-  branch: string;
+  name?: string;
+  userId?: string;
+  year?: string;
+  branch?: string;
   image?: string;
+  // New fields needed for AddSkillFlow
+  level?: SkillLevel;
+  tags?: string[];
+  verificationBadge?: string;
+  skillName?: string;
 }
 
 export interface Startup {
@@ -88,3 +106,5 @@ export interface Conversation {
   time: string;
   messages: Message[];
 }
+
+

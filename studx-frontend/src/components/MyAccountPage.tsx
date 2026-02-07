@@ -13,6 +13,11 @@ interface MyAccountPageProps {
 
 const MyAccountPage: React.FC<MyAccountPageProps> = ({ onBack, onNavigate }) => {
   const { user, updateUser } = useAuth();
+  // Add this inside MyAccountPage, near other useState hooks
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: '',
+    newPassword: ''
+  });
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -66,6 +71,44 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({ onBack, onNavigate }) => 
     setEditing(false);
     setError('');
   };
+
+  // Replace your added function with this one
+const handlePasswordChange = async () => {
+  // Validate inputs
+  if (!passwordData.oldPassword || !passwordData.newPassword) {
+    setError('Please enter both current and new passwords');
+    return;
+  }
+
+  setLoading(true);
+  setError('');
+  setSuccess('');
+
+  try {
+    const response = await fetch(`${API_BASE}/users/change-password`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ 
+        oldPassword: passwordData.oldPassword, 
+        newPassword: passwordData.newPassword 
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      setSuccess('Password changed successfully!');
+      setPasswordData({ oldPassword: '', newPassword: '' }); // Clear inputs
+      setTimeout(() => setSuccess(''), 3000);
+    } else {
+      throw new Error(data.message || 'Failed to change password');
+    }
+  } catch (err: any) {
+    setError(err.message || 'Error changing password');
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (!user) {
     return (
@@ -260,6 +303,55 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({ onBack, onNavigate }) => 
             )}
           </div>
         </div>
+
+            {/* --- START OF PASSWORD SECTION --- */}
+                <div className="mt-8 pt-6 border-t border-gray-100">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                      {/* Lock Icon */}
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
+                    Change Password
+                  </h3>
+                  
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Current Password
+                      </label>
+                      <input
+                        type="password"
+                        value={passwordData.oldPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, oldPassword: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="••••••••"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        New Password
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="password"
+                          value={passwordData.newPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          placeholder="••••••••"
+                        />
+                        <button
+                          onClick={handlePasswordChange}
+                          disabled={loading || !passwordData.oldPassword || !passwordData.newPassword}
+                          className="px-4 py-2 bg-slate-800 text-white rounded-lg text-sm font-semibold hover:bg-slate-900 disabled:bg-gray-300 transition-colors whitespace-nowrap"
+                        >
+                          Update
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* --- END OF PASSWORD SECTION --- */}
 
         {/* Quick Actions */}
         <div className="grid md:grid-cols-3 gap-4">
