@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { AppState } from '../types';
 import { useAuth, getAuthHeaders } from '../context/AuthContext';
 import { GlobalNav } from './HomePage';
+import { startConversation } from './services/chatService';
 import { Search, Grid, List, Plus, MapPin, User, Heart, X, ShoppingCart, MessageCircle, Loader, Upload, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const API_URL = 'http://localhost:5000/api';
@@ -98,6 +99,39 @@ const Marketplace: React.FC<MarketplaceProps> = ({
       setLoading(false);
     }
   };
+
+  // Handle starting a chat with seller
+const handleChatSeller = async (item: MarketplaceItem) => {
+  try {
+    // Check if seller info exists
+    if (!item.seller?._id) {
+      alert('Seller information not available');
+      return;
+    }
+
+    // Check if trying to chat with yourself
+    if (user && item.seller._id === user._id) {
+      alert('This is your own listing!');
+      return;
+    }
+
+    // Start conversation with seller
+    const conversationId = await startConversation(
+      item.seller._id, 
+      item.seller.name,
+      item.seller.email
+    );
+
+    console.log('Conversation started:', conversationId);
+
+    // Navigate to messages page
+    onNavigate('messages');
+  } catch (error) {
+    console.error('Failed to start chat:', error);
+    alert('Failed to start conversation. Please try again.');
+  }
+};
+
 
   useEffect(() => {
     fetchItems();
@@ -342,7 +376,12 @@ const Marketplace: React.FC<MarketplaceProps> = ({
                   </div>
                   <div className="grid grid-cols-2 gap-6 mt-12">
                     <button onClick={() => onAddToCart(selectedItem._id)} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-100 flex items-center justify-center gap-3 hover:scale-105 transition-all"><ShoppingCart size={20} /> Add to Cart</button>
-                    <button onClick={() => onStartChat(selectedItem.sellerName)} className="bg-white border-2 border-slate-100 text-slate-900 py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-50 hover:border-slate-300 transition-all"><MessageCircle size={20} /> Chat Seller</button>
+                    <button 
+                      onClick={() => handleChatSeller(selectedItem)} 
+                      className="bg-white border-2 border-slate-100 text-slate-900 py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-50 hover:border-slate-300 transition-all"
+                    >
+                      <MessageCircle size={20} /> Chat Seller
+                    </button>
                   </div>
                 </div>
               </div>

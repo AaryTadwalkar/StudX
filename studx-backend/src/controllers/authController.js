@@ -66,7 +66,7 @@ export const verifyOTP = async (req, res) => {
       return res.status(400).json({ message: "OTP has expired. Please request a new one." });
     }
 
-    // Check if user already exists (shouldn't happen, but safety check)
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
@@ -97,19 +97,18 @@ export const verifyOTP = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    // Return token and user data
+    // ✅ CRITICAL: Return user with _id field
     res.json({
       success: true,
       token,
       user: {
-        _id: user._id,
+        _id: user._id,          // ✅ MongoDB ID
         name: user.fullName,
         email: user.email,
         branch: user.branch,
-        year: user.year,
+        year: user.year.toString(),
         prn: user.prn,
-        phone: user.phone,
-        isVerified: user.isVerified
+        phone: user.phone
       }
     });
   } catch (err) {
@@ -171,15 +170,16 @@ export const login = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    // 7. Return success response
+    // ✅ CRITICAL: Return user with _id field
     res.json({
       success: true,
       token,
       user: {
+        _id: user._id,          // ✅ MongoDB ID
         name: user.fullName,
         email: user.email,
         branch: user.branch,
-        year: user.year,
+        year: user.year.toString(),
         prn: user.prn,
         phone: user.phone
       }
@@ -191,7 +191,7 @@ export const login = async (req, res) => {
   }
 };
 
-// 🆕 FORGOT PASSWORD - Send OTP
+// FORGOT PASSWORD - Send OTP
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -230,7 +230,7 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-// 🆕 RESET PASSWORD - Verify OTP and update password
+// RESET PASSWORD - Verify OTP and update password
 export const resetPassword = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;

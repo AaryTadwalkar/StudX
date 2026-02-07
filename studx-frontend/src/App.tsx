@@ -19,11 +19,10 @@ import MyAccountPage from './components/MyAccountPage';
 import MyOrdersPage from './components/MyOrdersPage';
 import GoPremiumPage from './components/GoPremiumPage';
 import MyListingsPage from './components/MyListingsPage';
-import type { AppState, User, MarketplaceItem, SkillExchange, Startup, Conversation, Message } from './types';
+import type { AppState, User, MarketplaceItem, SkillExchange, Startup } from './types';
 
 const API_BASE = "http://localhost:5000/api";
 
-// Added 'my-listings' to the type definition to ensure TypeScript accepts the new state
 type ExtendedAppState = AppState | 'forgot-password' | 'my-listings';
 
 const App: React.FC = () => {
@@ -38,7 +37,6 @@ const App: React.FC = () => {
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [cart, setCart] = useState<string[]>([]);
   const [mySkills, setMySkills] = useState<SkillExchange[]>([]);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -52,40 +50,14 @@ const App: React.FC = () => {
     }
 
     // Load saved data
-    const savedItems = localStorage.getItem('studx_items');
-    const savedStartups = localStorage.getItem('studx_startups');
     const savedWishlist = localStorage.getItem('studx_wishlist');
     const savedCart = localStorage.getItem('studx_cart');
     const savedSkills = localStorage.getItem('studx_my_skills');
-    const savedChats = localStorage.getItem('studx_chats');
 
     if (savedWishlist) setWishlist(JSON.parse(savedWishlist));
     if (savedCart) setCart(JSON.parse(savedCart));
     if (savedSkills) setMySkills(JSON.parse(savedSkills));
-    if (savedChats) setConversations(JSON.parse(savedChats));
-    
-    if (!savedItems) {
-      const seedItems: MarketplaceItem[] = [
-        { id: '1', name: 'Engineering Mathematics Textbook', price: 450, category: 'Textbooks', condition: 'Like New', image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=400', description: 'Complete set of engineering mathematics books for first year.', seller: 'Rahul Sharma', location: 'North Campus', rating: 4.8 },
-        { id: '2', name: 'HP Laptop i5 8th Gen', price: 25000, category: 'Electronics', condition: 'Good', image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&q=80&w=400', description: '8GB RAM, 256GB SSD, excellent for coding.', seller: 'Priya Patel', location: 'Main Building', rating: 4.5 }
-      ];
-      setItems(seedItems);
-      localStorage.setItem('studx_items', JSON.stringify(seedItems));
-    } else {
-      setItems(JSON.parse(savedItems));
-    }
 
-    if (!savedStartups) {
-      const seedStartups: Startup[] = [
-        { id: 's1', name: 'CampusEats', tagline: 'Fast hostel delivery.', founder: 'Arjun Malhotra', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800', followers: 1250, products: 15, isTrending: true, category: 'Food Tech', description: 'Hostel delivery platform.' }
-      ];
-      setStartups(seedStartups);
-      localStorage.setItem('studx_startups', JSON.stringify(seedStartups));
-    } else {
-      setStartups(JSON.parse(savedStartups));
-    }
-
-    // Set initial state based on authentication
     setState(isAuthenticated ? 'home' : 'auth');
   }, [authLoading, isAuthenticated]);
 
@@ -105,37 +77,6 @@ const App: React.FC = () => {
     } else {
       setState('home');
     }
-  };
-
-  const handleSendMessage = (convoId: string, text: string) => {
-    const updated = conversations.map(c => {
-      if (c.id === convoId) {
-        const newMessage: Message = { id: Date.now().toString(), sender: 'Me', text, timestamp: new Date().toLocaleTimeString(), isMe: true };
-        return { ...c, lastMessage: text, time: 'Just now', messages: [...c.messages, newMessage] };
-      }
-      return c;
-    });
-    setConversations(updated);
-    localStorage.setItem('studx_chats', JSON.stringify(updated));
-  };
-
-  const startConversation = (name: string) => {
-    const existing = conversations.find(c => c.name === name);
-    if (existing) {
-      navigateTo('messages');
-      return;
-    }
-    const newConvo: Conversation = {
-      id: Date.now().toString(),
-      name,
-      lastMessage: 'Hi, I would like to connect!',
-      time: 'Just now',
-      messages: [{ id: 'm1', sender: 'Me', text: 'Hi, I would like to connect!', timestamp: new Date().toLocaleTimeString(), isMe: true }]
-    };
-    const updated = [newConvo, ...conversations];
-    setConversations(updated);
-    localStorage.setItem('studx_chats', JSON.stringify(updated));
-    navigateTo('messages');
   };
 
   const handleAuthSubmit = async (userData: User & { password?: string }, mode: "login" | "signup") => {
@@ -192,7 +133,13 @@ const App: React.FC = () => {
 
         const data = await res.json();
         
-        // Use AuthContext login function
+        // ✅ Backend now returns _id, so no workaround needed
+        if (!data.user._id) {
+          console.error("Backend error: User ID missing", data.user);
+          alert("Server Error: Please restart your backend server");
+          return;
+        }
+
         login(data.token, data.user);
         setState("home");
       }
@@ -203,29 +150,20 @@ const App: React.FC = () => {
   };
 
   const handleOTPVerify = (token: string, user: User) => {
-    // Use AuthContext login function
-    login(token, user);
+    if (!user._id) {
+      console.error("User ID missing in OTP verification");
+      alert("Server Error: Please restart your backend server");
+      return;
+    }
+    login(token, user as any);
     setPendingUser(null);
     setState("landing");
   };
 
   const handleLogout = () => {
-    // Use AuthContext logout function
     logout();
     setHistory([]);
     setState('auth');
-  };
-
-  const addMarketplaceItem = (item: MarketplaceItem) => {
-    const updated = [item, ...items];
-    setItems(updated);
-    localStorage.setItem('studx_items', JSON.stringify(updated));
-  };
-
-  const addStartupItem = (startup: Startup) => {
-    const updated = [startup, ...startups];
-    setStartups(updated);
-    localStorage.setItem('studx_startups', JSON.stringify(updated));
   };
 
   const addSkill = (skill: SkillExchange) => {
@@ -266,10 +204,7 @@ const App: React.FC = () => {
         return (
           <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
             <Marketplace 
-              items={items} 
               wishlist={wishlist} 
-              onBack={goBack} 
-              onAddItem={addMarketplaceItem} 
               onToggleWishlist={(id) => {
                 const newW = wishlist.includes(id) ? wishlist.filter(x => x !== id) : [...wishlist, id];
                 setWishlist(newW);
@@ -283,7 +218,7 @@ const App: React.FC = () => {
                 }
               }} 
               onNavigate={navigateTo} 
-              onStartChat={startConversation} 
+              onStartChat={() => navigateTo('messages')} 
             />
           </ProtectedRoute>
         );
@@ -291,14 +226,27 @@ const App: React.FC = () => {
       case 'startups': 
         return (
           <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
-            <StartupShowcase startups={startups} onBack={goBack} onNavigate={navigateTo} onAddStartup={addStartupItem} onStartChat={startConversation} />
+            <StartupShowcase 
+              startups={startups} 
+              onBack={goBack} 
+              onNavigate={navigateTo} 
+              onAddStartup={(startup) => {
+                const updated = [startup, ...startups];
+                setStartups(updated);
+              }} 
+              onStartChat={() => navigateTo('messages')} 
+            />
           </ProtectedRoute>
         );
       
       case 'skills': 
         return (
           <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
-            <SkillBarter onBack={goBack} onNavigate={navigateTo} onStartChat={startConversation} />
+            <SkillBarter 
+              onBack={goBack} 
+              onNavigate={navigateTo} 
+              onStartChat={() => navigateTo('messages')} 
+            />
           </ProtectedRoute>
         );
       
@@ -306,10 +254,8 @@ const App: React.FC = () => {
         return (
           <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
             <WishlistPage 
-              items={items} 
               wishlist={wishlist} 
-              onBack={goBack} 
-              onRemove={(id) => {
+              onToggleWishlist={(id) => {
                 const newW = wishlist.filter(x => x !== id);
                 setWishlist(newW);
                 localStorage.setItem('studx_wishlist', JSON.stringify(newW));
@@ -321,7 +267,6 @@ const App: React.FC = () => {
                   localStorage.setItem('studx_cart', JSON.stringify(newC));
                 }
               }} 
-              onGoMarketplace={() => navigateTo('marketplace')} 
               onNavigate={navigateTo} 
             />
           </ProtectedRoute>
@@ -331,15 +276,12 @@ const App: React.FC = () => {
         return (
           <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
             <CartPage 
-              items={items} 
               cart={cart} 
-              onBack={goBack} 
-              onRemove={(id) => {
+              onRemoveFromCart={(id) => {
                 const newC = cart.filter(x => x !== id);
                 setCart(newC);
                 localStorage.setItem('studx_cart', JSON.stringify(newC));
               }} 
-              onGoMarketplace={() => navigateTo('marketplace')} 
               onNavigate={navigateTo} 
             />
           </ProtectedRoute>
@@ -348,7 +290,7 @@ const App: React.FC = () => {
       case 'messages': 
         return (
           <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
-            <MessagesPage conversations={conversations} onSendMessage={handleSendMessage} onBack={goBack} onNavigate={navigateTo} />
+            <MessagesPage onBack={goBack} onNavigate={navigateTo} />
           </ProtectedRoute>
         );
       
@@ -383,7 +325,7 @@ const App: React.FC = () => {
       case 'my-listings':
         return (
           <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
-             <MyListingsPage onNavigate={navigateTo} onBack={goBack} />
+             <MyListingsPage onNavigate={navigateTo} />
           </ProtectedRoute>
         );
       

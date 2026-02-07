@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import itemRoutes from "./routes/itemRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";  // NEW
+
 
 dotenv.config();
 
@@ -19,6 +21,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/items", itemRoutes);
+app.use("/api/messages", messageRoutes);  // NEW
 
 // Health check
 app.get("/", (req, res) => {

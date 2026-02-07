@@ -1,13 +1,12 @@
-// ================= APP STATE =================
-export type AppState =
+// types.ts - Complete type definitions
+
+export type AppState = 
   | 'loading'
   | 'auth'
   | 'otp'
-  | 'forgot-password'
   | 'landing'
   | 'home'
   | 'marketplace'
-  | 'my-listings' 
   | 'startups'
   | 'skills'
   | 'wishlist'
@@ -19,70 +18,61 @@ export type AppState =
   | 'my-orders'
   | 'premium';
 
-// ================= USER =================
 export interface User {
+  _id?: string;        // MongoDB ID (optional for frontend creation)
   name: string;
   email: string;
+  phone: string;
   branch: string;
   year: string;
   prn: string;
-  phone: string;
+  regNo?: string;      // Optional registration number
+  isVerified?: boolean;
 }
 
-// ================= MARKETPLACE =================
 export interface MarketplaceItem {
   id: string;
   name: string;
   price: number;
   category: string;
-  condition: 'Like New' | 'Good' | 'Fair';
+  condition: string;
   image: string;
   description: string;
   seller: string;
+  sellerId?: string;   // MongoDB user ID of seller
   location: string;
-  rating?: number;
+  rating: number;
+  createdAt?: Date;
 }
 
-// ================= STARTUPS =================
+export interface SkillExchange {
+  id: string;
+  title: string;
+  offering: string;
+  seeking: string;
+  category: string;
+  description: string;
+  name: string;
+  userId?: string;     // MongoDB user ID
+  year: string;
+  branch: string;
+  image?: string;
+}
+
 export interface Startup {
   id: string;
   name: string;
   tagline: string;
   founder: string;
+  founderId?: string;  // MongoDB user ID
   image: string;
   followers: number;
   products: number;
   isTrending: boolean;
   category: string;
-  description?: string;
+  description: string;
 }
 
-// ================= SKILLS =================
-export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced';
-export type VerificationType =
-  | 'Verified (Intermediate)'
-  | 'Verified (Basic)'
-  | 'Self-declared'
-  | 'Portfolio Verified';
-
-export interface SkillExchange {
-  id: string;
-  user: string;
-  offering: string;
-  requesting: string;
-  tags: string[];
-  type: 'OFFERING' | 'REQUESTING';
-  rating: number;
-  exchangeValue?: string;
-  description?: string;
-  email?: string;
-  phone?: string;
-  category?: string;
-  level?: SkillLevel;
-  verificationBadge?: VerificationType;
-}
-
-// ================= CHAT =================
 export interface Message {
   id: string;
   sender: string;
@@ -96,6 +86,5 @@ export interface Conversation {
   name: string;
   lastMessage: string;
   time: string;
-  unread?: number;
   messages: Message[];
 }
