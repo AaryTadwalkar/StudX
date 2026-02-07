@@ -2,13 +2,16 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const API_BASE = "http://localhost:5000/api";
 
-interface User {
+export interface User {
+  _id: string;
   name: string;
   email: string;
-  branch: string;
-  year: number;
-  prn: string;
   phone: string;
+  branch: string;
+  year: string;  // ← CHANGED from number to string
+  prn: string;
+  regNo: string;
+  isVerified: boolean;
 }
 
 interface AuthContextType {

@@ -102,12 +102,14 @@ export const verifyOTP = async (req, res) => {
       success: true,
       token,
       user: {
+        _id: user._id,
         name: user.fullName,
         email: user.email,
         branch: user.branch,
         year: user.year,
         prn: user.prn,
-        phone: user.phone
+        phone: user.phone,
+        isVerified: user.isVerified
       }
     });
   } catch (err) {

@@ -18,11 +18,13 @@ import AddSkillFlow from './components/AddSkillFlow';
 import MyAccountPage from './components/MyAccountPage';
 import MyOrdersPage from './components/MyOrdersPage';
 import GoPremiumPage from './components/GoPremiumPage';
+import MyListingsPage from './components/MyListingsPage';
 import type { AppState, User, MarketplaceItem, SkillExchange, Startup, Conversation, Message } from './types';
 
 const API_BASE = "http://localhost:5000/api";
 
-type ExtendedAppState = AppState | 'forgot-password';
+// Added 'my-listings' to the type definition to ensure TypeScript accepts the new state
+type ExtendedAppState = AppState | 'forgot-password' | 'my-listings';
 
 const App: React.FC = () => {
   const { user, login, logout, loading: authLoading, isAuthenticated } = useAuth();
@@ -375,6 +377,13 @@ const App: React.FC = () => {
         return (
           <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
             <MyOrdersPage onBack={goBack} onNavigate={navigateTo} />
+          </ProtectedRoute>
+        );
+
+      case 'my-listings':
+        return (
+          <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
+             <MyListingsPage onNavigate={navigateTo} onBack={goBack} />
           </ProtectedRoute>
         );
       

@@ -1,5 +1,5 @@
 import express from "express";
-import authMiddleware from '../middleware/authMiddleware.js';
+import { protect } from '../middleware/authMiddleware.js';
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 
@@ -10,9 +10,9 @@ const router = express.Router();
  * Get current user profile
  * Protected route - requires authentication
  */
-router.get("/me", authMiddleware, async (req, res) => {
+router.get("/me", protect, async (req, res) => {
   try {
-    // req.user is already attached by authMiddleware
+    // req.user is already attached by protect middleware
     const user = await User.findById(req.user.userId).select('-password');
     
     if (!user) {
@@ -44,7 +44,7 @@ router.get("/me", authMiddleware, async (req, res) => {
  * Update user profile (name, phone, branch, year)
  * Protected route - requires authentication
  */
-router.put("/update-profile", authMiddleware, async (req, res) => {
+router.put("/update-profile", protect, async (req, res) => {
   try {
     const { fullName, phone, branch, year } = req.body;
 
@@ -88,7 +88,7 @@ router.put("/update-profile", authMiddleware, async (req, res) => {
  * Change user password
  * Protected route - requires authentication
  */
-router.put("/change-password", authMiddleware, async (req, res) => {
+router.put("/change-password", protect, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
@@ -133,8 +133,8 @@ router.put("/change-password", authMiddleware, async (req, res) => {
  * Verify if token is still valid
  * Protected route - requires authentication
  */
-router.get("/verify-token", authMiddleware, async (req, res) => {
-  // If we reach here, token is valid (authMiddleware passed)
+router.get("/verify-token", protect, async (req, res) => {
+  // If we reach here, token is valid (protect middleware passed)
   res.json({
     success: true,
     valid: true,

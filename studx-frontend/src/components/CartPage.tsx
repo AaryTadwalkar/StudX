@@ -1,84 +1,190 @@
-
-import React from 'react';
-import type { MarketplaceItem, AppState } from '../types';
+import React, { useState, useEffect } from 'react';
+import { useAuth, getAuthHeaders } from '../context/AuthContext';
 import { GlobalNav } from './HomePage';
-import { ChevronLeft, Trash2, ShoppingCart, ShoppingBag, Plus, Minus, ChevronRight, ShieldCheck } from 'lucide-react';
+import type { AppState } from '../types';
+import { ShoppingCart, Trash2, Plus, Minus, Loader, ImageIcon, ArrowRight } from 'lucide-react';
+
+const API_URL = 'http://localhost:5000/api';
+
+interface CartItem {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  customCategory?: string;
+  condition: string;
+  images: Array<{ url: string; publicId: string }>;
+  sellerName: string;
+  location: string;
+  quantity: number; // Added for cart functionality
+}
 
 interface CartPageProps {
-  items: MarketplaceItem[];
   cart: string[];
-  onBack: () => void;
-  onRemove: (id: string) => void;
-  onGoMarketplace: () => void;
+  onRemoveFromCart: (id: string) => void;
   onNavigate: (s: AppState) => void;
 }
 
-const CartPage: React.FC<CartPageProps> = ({ items, cart, onBack, onRemove, onGoMarketplace, onNavigate }) => {
-  const cartItems = items.filter(item => cart.includes(item.id));
-  const subtotal = cartItems.reduce((acc, item) => acc + item.price, 0);
+const CartPage: React.FC<CartPageProps> = ({ 
+  cart, 
+  onRemoveFromCart, 
+  onNavigate 
+}) => {
+  const { user } = useAuth();
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+
+  // Fetch cart items
+  useEffect(() => {
+    const fetchCartItems = async () => {
+      if (cart.length === 0) {
+        setItems([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        // Fetch each item in cart
+        const promises = cart.map(id => 
+          fetch(`${API_URL}/items/${id}`).then(res => res.json())
+        );
+        
+        const results = await Promise.all(promises);
+        const validItems = results.filter(item => item._id);
+        setItems(validItems);
+        
+        // Initialize quantities
+        const initialQuantities: { [key: string]: number } = {};
+        validItems.forEach(item => {
+          initialQuantities[item._id] = 1;
+        });
+        setQuantities(initialQuantities);
+      } catch (error) {
+        console.error('Failed to fetch cart items:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCartItems();
+  }, [cart]);
+
+  const updateQuantity = (id: string, change: number) => {
+    setQuantities(prev => ({
+      ...prev,
+      [id]: Math.max(1, (prev[id] || 1) + change)
+    }));
+  };
+
+  const handleRemove = (id: string) => {
+    onRemoveFromCart(id);
+    setItems(prev => prev.filter(item => item._id !== id));
+  };
+
+  const calculateTotal = () => {
+    return items.reduce((total, item) => {
+      return total + (item.price * (quantities[item._id] || 1));
+    }, 0);
+  };
+
+  const handleCheckout = () => {
+    alert('Checkout feature coming soon! Total: ₹' + calculateTotal());
+  };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-32">
-      <GlobalNav user={null} onNavigate={onNavigate} onLogout={() => onNavigate('auth')} />
+    <div className="min-h-screen bg-[#F8FAFC] pb-20">
+      <GlobalNav user={user} onNavigate={onNavigate} onLogout={() => onNavigate('auth')} />
 
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="flex items-center justify-between mb-16 animate-fade-in-up">
-          <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-200">
-              <ShoppingCart size={32} />
-            </div>
-            <div>
-              <h1 className="text-5xl font-black text-slate-900 tracking-tighter">Your Cart</h1>
-              <p className="text-slate-400 font-black uppercase text-[11px] tracking-widest mt-1">{cartItems.length} items ready for checkout</p>
-            </div>
-          </div>
-          <button onClick={onBack} className="bg-white border-2 border-slate-100 px-6 py-3 rounded-2xl text-slate-900 font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-3">
-             <ChevronLeft size={20} /> Back
-          </button>
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="mb-12">
+          <h1 className="text-4xl font-black text-slate-900 mb-4 tracking-tight flex items-center gap-4">
+            <ShoppingCart size={40} className="text-blue-600" />
+            Shopping Cart
+          </h1>
+          <p className="text-slate-500 font-medium">
+            {cart.length} {cart.length === 1 ? 'item' : 'items'} in cart
+          </p>
         </div>
 
-        {cartItems.length === 0 ? (
-          <div className="bg-white rounded-[4rem] p-32 text-center border border-slate-100 shadow-xl shadow-slate-200/20 flex flex-col items-center animate-fade-in-up">
-            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-10 shadow-inner">
-              <ShoppingBag size={48} />
-            </div>
-            <h2 className="text-3xl font-black text-slate-900 mb-6">Your cart is empty</h2>
-            <p className="text-slate-500 font-medium mb-12 max-w-xs mx-auto leading-relaxed">Items you add to your cart from the marketplace will appear here.</p>
-            <button 
-              onClick={onGoMarketplace}
-              className="bg-blue-600 text-white px-12 py-5 rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl shadow-blue-200 hover:scale-105 transition-all"
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <Loader className="animate-spin text-blue-600" size={48} />
+          </div>
+        ) : items.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-[3rem] border border-slate-100">
+            <ShoppingCart className="mx-auto text-slate-300 mb-6" size={64} />
+            <h3 className="text-2xl font-black text-slate-900 mb-2">Your cart is empty</h3>
+            <p className="text-slate-400 mb-8">Add some items to get started!</p>
+            <button
+              onClick={() => onNavigate('marketplace')}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-[1.5rem] font-black text-sm shadow-xl hover:scale-105 transition-all"
             >
-              Start Shopping
+              Browse Marketplace
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-            <div className="lg:col-span-2 space-y-8">
-              {cartItems.map((item, idx) => (
-                <div key={item.id} className="bg-white rounded-[3rem] border border-slate-100 p-10 shadow-xl shadow-slate-200/20 flex flex-col md:flex-row gap-10 items-center animate-fade-in-up hover:shadow-2xl transition-all duration-500 group" style={{ animationDelay: `${idx * 0.1}s` }}>
-                  <div className="w-48 h-48 bg-slate-100 rounded-[2.5rem] overflow-hidden shrink-0 shadow-lg group-hover:scale-105 transition-transform duration-500">
-                    <img src={item.image} className="w-full h-full object-cover" alt={item.name} />
-                  </div>
-                  <div className="flex-1 w-full">
-                    <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
-                      <div>
-                        <h3 className="text-3xl font-black text-slate-900 mb-2 tracking-tight line-clamp-1">{item.name}</h3>
-                        <p className="text-slate-500 text-base font-medium line-clamp-2 leading-relaxed opacity-80">{item.description}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-blue-100">{item.condition}</span>
-                        <button onClick={() => onRemove(item.id)} className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shadow-sm"><Trash2 size={22} /></button>
-                      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Cart Items */}
+            <div className="lg:col-span-2 space-y-6">
+              {items.map(item => (
+                <div key={item._id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-lg transition-all p-6">
+                  <div className="flex gap-6">
+                    <div className="w-32 h-32 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
+                      {item.images && item.images.length > 0 ? (
+                        <img src={item.images[0].url} className="w-full h-full object-cover" alt={item.name} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-300">
+                          <ImageIcon size={32} />
+                        </div>
+                      )}
                     </div>
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-8 pt-8 border-t border-slate-50">
-                      <div className="flex items-center gap-6 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
-                        <button className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-400 hover:text-blue-600 hover:shadow-md transition-all"><Minus size={18} /></button>
-                        <span className="font-black text-xl text-slate-900">1</span>
-                        <button className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-400 hover:text-blue-600 hover:shadow-md transition-all"><Plus size={18} /></button>
+
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="text-xl font-black text-slate-900 mb-1">{item.name}</h3>
+                          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                            {item.category === 'Other' && item.customCategory ? item.customCategory : item.category}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleRemove(item._id)}
+                          className="text-red-500 hover:bg-red-50 p-2 rounded-xl transition-all"
+                        >
+                          <Trash2 size={20} />
+                        </button>
                       </div>
-                      <div className="flex flex-col items-end">
-                         <span className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Item Total</span>
-                         <span className="text-4xl font-black text-blue-600">₹{item.price}</span>
+
+                      <p className="text-slate-600 text-sm mb-4 line-clamp-2">{item.description}</p>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 bg-slate-100 rounded-2xl p-2">
+                          <button
+                            onClick={() => updateQuantity(item._id, -1)}
+                            className="w-8 h-8 rounded-xl bg-white text-slate-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center"
+                          >
+                            <Minus size={16} />
+                          </button>
+                          <span className="font-black text-slate-900 min-w-[2rem] text-center">
+                            {quantities[item._id] || 1}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(item._id, 1)}
+                            className="w-8 h-8 rounded-xl bg-white text-slate-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center"
+                          >
+                            <Plus size={16} />
+                          </button>
+                        </div>
+
+                        <div className="text-right">
+                          <p className="text-slate-400 text-xs font-bold mb-1">Item Total</p>
+                          <p className="text-2xl font-black text-blue-600">
+                            ₹{item.price * (quantities[item._id] || 1)}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -86,52 +192,44 @@ const CartPage: React.FC<CartPageProps> = ({ items, cart, onBack, onRemove, onGo
               ))}
             </div>
 
-            <div className="space-y-8">
-              <div className="bg-white rounded-[4rem] p-12 border border-slate-100 shadow-2xl shadow-slate-200/40 animate-fade-in-up relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-16 -mt-16"></div>
-                <h2 className="text-4xl font-black text-slate-900 mb-10 tracking-tighter relative z-10">Order Summary</h2>
-                <div className="space-y-8 mb-12 relative z-10">
-                  <div className="flex justify-between items-center text-lg font-bold">
-                    <span className="text-slate-400">Subtotal</span>
-                    <span className="text-slate-900 font-black">₹{subtotal}</span>
+            {/* Order Summary */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-lg p-8 sticky top-8">
+                <h3 className="text-2xl font-black text-slate-900 mb-6">Order Summary</h3>
+
+                <div className="space-y-4 mb-6">
+                  <div className="flex justify-between text-slate-600">
+                    <span className="font-bold">Subtotal</span>
+                    <span className="font-black">₹{calculateTotal()}</span>
                   </div>
-                  <div className="flex justify-between items-center text-lg font-bold">
-                    <span className="text-slate-400">Campus Pickup</span>
-                    <span className="text-emerald-600 uppercase font-black text-xs tracking-widest bg-emerald-50 px-3 py-1 rounded-lg">FREE</span>
+                  <div className="flex justify-between text-slate-600">
+                    <span className="font-bold">Shipping</span>
+                    <span className="font-black text-emerald-600">FREE</span>
                   </div>
-                  <div className="h-px bg-slate-100"></div>
-                  <div className="flex justify-between items-end">
-                    <div>
-                       <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2 block">Grand Total</span>
-                       <span className="text-5xl font-black text-blue-600 tracking-tighter">₹{subtotal}</span>
+                  <div className="border-t border-slate-200 pt-4">
+                    <div className="flex justify-between">
+                      <span className="text-lg font-black text-slate-900">Total</span>
+                      <span className="text-2xl font-black text-blue-600">₹{calculateTotal()}</span>
                     </div>
                   </div>
                 </div>
-                <button className="w-full bg-slate-900 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-slate-300 hover:scale-105 transition-all mb-6 relative z-10">
+
+                <button
+                  onClick={handleCheckout}
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-[1.5rem] font-black text-sm uppercase tracking-widest shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-3"
+                >
                   Proceed to Checkout
+                  <ArrowRight size={20} />
                 </button>
-                <div className="flex items-center justify-center gap-3 text-slate-400 text-[10px] font-black uppercase tracking-widest opacity-60">
-                   <ShieldCheck size={16} /> Campus Secure Checkout
-                </div>
-              </div>
-              
-              <div className="bg-blue-50/50 p-10 rounded-[3rem] border border-blue-100 border-dashed text-center">
-                 <p className="text-blue-600 text-xs font-bold leading-relaxed">
-                   Meet sellers in public campus locations. Check product condition thoroughly before completing payment.
-                 </p>
+
+                <p className="text-slate-400 text-xs text-center mt-4 font-medium">
+                  Secure checkout • Campus delivery
+                </p>
               </div>
             </div>
           </div>
         )}
       </div>
-
-      <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
-      `}</style>
     </div>
   );
 };
