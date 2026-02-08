@@ -23,10 +23,13 @@ import SkillTestPage from './components/SkillTestPage';
 import MediaVerificationPage from './components/MediaVerificationPage';
 import type { AppState, User, MarketplaceItem, SkillExchange, Startup } from './types';
 import MySkillsPageEnhanced from './components/MySkillsPage';
+import { getAuthHeaders } from './context/AuthContext';
+import ConnectionsPage from './components/ConnectionsPage';
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
-type ExtendedAppState = AppState | 'forgot-password' | 'my-listings' | 'skill-test' | 'media-verification';
+type ExtendedAppState = AppState | 'forgot-password' | 'my-listings' | 
+  'skill-test' | 'media-verification' | 'connections';  // ✅ ADD THIS
 
 const App: React.FC = () => {
   const { user, login, logout, loading: authLoading, isAuthenticated } = useAuth();
@@ -252,16 +255,23 @@ const App: React.FC = () => {
         );
       
       case 'skills': 
-        return (
-          <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
-            <SkillBarter 
-              onBack={goBack} 
-              onNavigate={navigateTo} 
-              onStartChat={() => navigateTo('messages')} 
-            />
-          </ProtectedRoute>
-        );
-      
+  return (
+    <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
+      <SkillBarter 
+        onBack={goBack} 
+        onNavigate={navigateTo}
+      />
+    </ProtectedRoute>
+  );
+      case 'connections':
+  return (
+    <ProtectedRoute onRedirectToLogin={() => setState('auth')}>
+      <ConnectionsPage 
+        onBack={goBack}
+        onNavigate={navigateTo}
+      />
+    </ProtectedRoute>
+  );
       case 'wishlist': 
         return (
           <ProtectedRoute onRedirectToLogin={() => setState('auth')}>

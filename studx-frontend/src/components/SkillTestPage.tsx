@@ -4,7 +4,7 @@ import type { AppState } from '../types';
 import { X, Clock, CheckCircle, AlertCircle, Trophy, ChevronRight, ChevronLeft } from 'lucide-react';
 import { reactBeginnerTest, reactIntermediateTest, reactAdvancedTest, type SkillTest } from '../utils/testBanks';
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
 interface SkillTestPageProps {
   skillName: string;

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import type { User } from '../types';
 import type { AppState } from '../types';
-import { ShoppingBag, Rocket, RefreshCw, MessageSquare, User as UserIcon, LogOut, ChevronRight, Heart, ShoppingCart, Home, ChevronDown, Shield, CreditCard, Box, Zap, Sparkles } from 'lucide-react';
+import { ShoppingBag, Rocket, RefreshCw, MessageSquare, User as UserIcon, LogOut, ChevronRight, Heart, ShoppingCart, Home, ChevronDown, Shield, CreditCard, Box, Zap, Sparkles, Users } from 'lucide-react';
 
 interface HomePageProps {
   user: User | null;
@@ -40,6 +40,7 @@ export const GlobalNav: React.FC<{ user: User | null; onNavigate: (s: AppState) 
             <button onClick={() => onNavigate('marketplace')} className="text-[11px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Marketplace</button>
             <button onClick={() => onNavigate('startups')} className="text-[11px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Startups</button>
             <button onClick={() => onNavigate('skills')} className="text-[11px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Skills</button>
+            <button onClick={() => onNavigate('connections')} className="text-[11px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Connections</button>
           </div>
           
           <div className="flex items-center gap-4 md:gap-6 text-slate-400 border-l border-slate-100 pl-6 md:pl-10">
@@ -73,6 +74,7 @@ export const GlobalNav: React.FC<{ user: User | null; onNavigate: (s: AppState) 
                    <button onClick={() => {onNavigate('my-skills'); setShowUserMenu(false)}} className="w-full px-6 py-3 text-left text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center gap-4 transition-all"><Zap size={16}/> My Skills</button>
                    <button onClick={() => {onNavigate('premium'); setShowUserMenu(false)}} className="w-full px-6 py-3 text-left text-xs font-black text-blue-600 hover:bg-blue-50 flex items-center gap-4 transition-all"><CreditCard size={16}/> Go Premium</button>
                    <div className="h-px bg-slate-100 my-2 mx-4"></div>
+                   
                    <button onClick={onLogout} className="w-full px-6 py-3 text-left text-xs font-bold text-rose-500 hover:bg-rose-50 flex items-center gap-4 transition-all"><LogOut size={16}/> Logout</button>
                  </div>
                )}

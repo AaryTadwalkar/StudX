@@ -9,6 +9,7 @@ export type AppState =
   | 'marketplace'
   | 'startups'
   | 'skills'
+  | 'connections' 
   | 'wishlist'
   | 'cart'
   | 'messages'

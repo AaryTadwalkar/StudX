@@ -3,7 +3,7 @@ import { ChevronLeft, Send, Search, Trash2, MessageCircle } from 'lucide-react';
 import { useAuth, getAuthHeaders } from '../context/AuthContext';
 import type { AppState } from '../types';
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
 interface Message {
   id: string;

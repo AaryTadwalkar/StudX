@@ -3,7 +3,7 @@ import { ChevronLeft, User as UserIcon, Mail, Phone, BookOpen, Calendar, CreditC
 import { useAuth, getAuthHeaders } from '../context/AuthContext';
 import type { User, AppState } from '../types';
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
 interface MyAccountPageProps {
   user: User | null;

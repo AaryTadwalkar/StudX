@@ -3,7 +3,7 @@ import { useAuth, getAuthHeaders } from '../context/AuthContext';
 import type { AppState } from '../types';
 import { Upload, X, Image as ImageIcon, Video, FileText, CheckCircle, Loader } from 'lucide-react';
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
 interface MediaFile {
   id: string;

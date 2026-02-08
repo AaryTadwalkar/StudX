@@ -7,7 +7,7 @@ import userRoutes from "./routes/userRoutes.js";
 import itemRoutes from "./routes/itemRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";  // NEW
 import skillRoutes from "./routes/skillRoutes.js";
-
+import skillBarterRoutes from "./routes/skillBarterRoutes.js"
 
 dotenv.config();
 
@@ -24,7 +24,16 @@ app.use("/api/users", userRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/messages", messageRoutes);  // NEW
 app.use("/api/skills", skillRoutes);
-
+app.use("/api/skill-barter", skillBarterRoutes);
+// In studx-backend/src/server.js
+app.use(cors({
+  origin: [
+    "http://localhost:5173", 
+    "https://studx.vercel.app", // We will try to get this URL, or update it later
+    process.env.FRONTEND_URL // Good practice to use an env variable
+  ],
+  credentials: true
+}));
 // Health check
 app.get("/", (req, res) => {
   res.json({ message: "StudX API is running!" });

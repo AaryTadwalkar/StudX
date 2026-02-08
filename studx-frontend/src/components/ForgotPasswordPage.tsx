@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, Mail, Lock, Shield } from 'lucide-react';
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
 interface ForgotPasswordPageProps {
   onBack: () => void;

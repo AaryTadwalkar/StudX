@@ -8,7 +8,7 @@ interface OTPPageProps {
   onBack: () => void;
 }
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
 const OTPPage: React.FC<OTPPageProps> = ({ pendingUser, onVerify, onBack }) => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
