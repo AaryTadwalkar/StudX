@@ -13,7 +13,6 @@ import SkillBarter from './components/SkillBarter';
 import WishlistPage from './components/WishlistPage';
 import CartPage from './components/CartPage';
 import MessagesPage from './components/MessagesPage';
-import MySkillsPage from './components/MySkillsPage';
 import AddSkillFlow from './components/AddSkillFlow';
 import MyAccountPage from './components/MyAccountPage';
 import MyOrdersPage from './components/MyOrdersPage';
