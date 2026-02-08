@@ -4,7 +4,7 @@ import { GlobalNav } from './HomePage';
 import type { AppState } from '../types';
 import { Package, Edit, Trash2, Eye, MapPin, Calendar, Loader, CheckCircle, XCircle } from 'lucide-react';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_BASE || "http://localhost:5000/api";
 
 interface ListingItem {
   _id: string;

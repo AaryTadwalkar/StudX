@@ -4,7 +4,7 @@ import { GlobalNav } from './HomePage';
 import type { AppState } from '../types';
 import { ShoppingCart, Trash2, Plus, Minus, Loader, ImageIcon, ArrowRight } from 'lucide-react';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_BASE || "http://localhost:5000/api";
 
 interface CartItem {
   _id: string;

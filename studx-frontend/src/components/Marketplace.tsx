@@ -5,7 +5,7 @@ import { GlobalNav } from './HomePage';
 import { startConversation } from './services/chatService';
 import { Search, Grid, List, Plus, MapPin, User, Heart, X, ShoppingCart, MessageCircle, Loader, Upload, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_BASE || "http://localhost:5000/api"; // ✅ GOOD
 
 interface MarketplaceItem {
   _id: string;
