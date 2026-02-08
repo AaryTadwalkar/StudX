@@ -28,6 +28,7 @@ app.use("/api/skill-barter", skillBarterRoutes);
 // In studx-backend/src/server.js
 app.use(cors({
   origin: [
+    "https://studx-phi.vercel.app",
     "http://localhost:5173", 
     "https://studx.vercel.app", // We will try to get this URL, or update it later
     process.env.FRONTEND_URL // Good practice to use an env variable
